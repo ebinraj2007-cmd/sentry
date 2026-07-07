@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENTRY — AI Cargo Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060810;
+    --bg2: #0a0e1a;
+    --blue: #0ea5e9;
+    --blue2: #38bdf8;
+    --blue-dim: rgba(14,165,233,0.15);
+    --blue-glow: rgba(14,165,233,0.4);
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --green: #22c55e;
+    --white: #f0f4ff;
+    --muted: #64748b;
+    --card: rgba(14,165,233,0.05);
+    --border: rgba(14,165,233,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1.2rem 4rem;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(6,8,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.4rem;
+    letter-spacing: 0.12em;
+    color: var(--blue);
+  }
+  .nav-logo span { color: var(--white); }
+  .nav-links { display: flex; gap: 2.5rem; }
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem; letter-spacing: 0.1em;
+    color: var(--muted); text-decoration: none;
+    transition: color 0.2s;
+    text-transform: uppercase;
+  }
+  .nav-links a:hover { color: var(--blue); }
+  .nav-badge {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    color: var(--muted); letter-spacing: 0.05em;
+  }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); position: relative; }
+  .pulse::after {
+    content: ''; position: absolute; inset: -3px; border-radius: 50%;
+    background: var(--green); opacity: 0.3;
+    animation: pulseRing 1.8s ease infinite;
+  }
+  @keyframes pulseRing { 0%,100%{transform:scale(1);opacity:.3} 50%{transform:scale(1.8);opacity:0} }
+
+  /* ── GRID BG ── */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .grid-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(14,165,233,0.08) 0%, transparent 70%);
+  }
+
+  /* ── SECTIONS ── */
+  section { position: relative; z-index: 1; }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 8rem 2rem 5rem;
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 0.2em;
+    color: var(--blue); text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0; transform: translateY(20px);
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3.2rem, 7vw, 6.5rem);
+    font-weight: 800; line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin-bottom: 2rem;
+    opacity: 0; transform: translateY(30px);
+    animation: fadeUp 0.9s 0.35s forwards;
+  }
+  .hero-title em {
+    font-style: normal;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--blue);
+  }
+  .hero-sub {
+    font-size: 1.15rem; color: var(--muted);
+    max-width: 600px; line-height: 1.7;
+    margin: 0 auto 3rem;
+    opacity: 0; transform: translateY(20px);
+    animation: fadeUp 0.9s 0.5s forwards;
+  }
+  .hero-btns {
+    display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 5rem;
+    opacity: 0; transform: translateY(20px);
+    animation: fadeUp 0.9s 0.65s forwards;
+  }
+  .btn-primary {
+    background: var(--blue); color: #000;
+    border: none; padding: 0.85rem 2.2rem;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem;
+    letter-spacing: 0.05em; cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: var(--blue2); transform: translateY(-2px); }
+  .btn-ghost {
+    background: transparent; color: var(--white);
+    border: 1px solid var(--border); padding: 0.85rem 2.2rem;
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.9rem;
+    letter-spacing: 0.05em; cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-2px); }
+
+  /* stats strip */
+  .stats-strip {
+    display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap;
+    opacity: 0; transform: translateY(20px);
+    animation: fadeUp 0.9s 0.8s forwards;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800;
+    color: var(--blue);
+    text-shadow: 0 0 30px var(--blue-glow);
+  }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); letter-spacing: 0.08em; margin-top: 0.3rem; }
+
+  /* ── SCROLL SLIDES ── */
+  .slide {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 6rem 6rem;
+    max-width: 1300px; margin: 0 auto;
+    opacity: 0; transform: translateY(60px);
+    transition: opacity 0.9s cubic-bezier(0.19,1,0.22,1), transform 0.9s cubic-bezier(0.19,1,0.22,1);
+  }
+  .slide.visible { opacity: 1; transform: translateY(0); }
+
+  .slide-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--blue); margin-bottom: 1rem;
+  }
+  .slide-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+    font-weight: 800; line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+  .slide-body { font-size: 1.1rem; color: var(--muted); line-height: 1.8; max-width: 700px; }
+
+  /* divider */
+  .h-divider {
+    width: 100%; max-width: 1300px; margin: 0 auto;
+    border: none; border-top: 1px solid var(--border);
+    position: relative; z-index: 1;
+  }
+
+  /* ── PROBLEM SLIDE ── */
+  .problem-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+    margin-top: 3rem;
+  }
+  .problem-card {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 2rem; position: relative; overflow: hidden;
+  }
+  .problem-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: linear-gradient(90deg, var(--blue), transparent);
+  }
+  .problem-card h3 {
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; margin-bottom: 1rem;
+  }
+  .problem-card p { font-size: 0.95rem; color: var(--muted); line-height: 1.7; }
+  .silo-diagram {
+    display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .silo {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    padding: 0.7rem 1rem; font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; color: var(--muted);
+    position: relative;
+  }
+  .silo-x {
+    font-family: 'DM Mono', monospace; font-size: 1.2rem; color: var(--red);
+  }
+
+  /* ── SOLUTION SLIDE ── */
+  .streams {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  .stream-card {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 2rem; text-align: center;
+    opacity: 0; transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.19,1,0.22,1);
+  }
+  .stream-card.visible { opacity: 1; transform: translateY(0); }
+  .stream-num {
+    font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
+    color: transparent; -webkit-text-stroke: 1px var(--blue);
+    margin-bottom: 1rem; opacity: 0.4;
+  }
+  .stream-card h3 {
+    font-family: 'Syne', sans-serif; font-size: 1.05rem; margin-bottom: 0.7rem;
+  }
+  .stream-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── HOW IT WORKS ── */
+  .process-steps {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    margin-top: 3rem;
+  }
+  .step {
+    display: flex; gap: 1.5rem; align-items: flex-start;
+    padding: 1.5rem; background: var(--card); border: 1px solid var(--border);
+    opacity: 0; transform: translateX(-30px);
+    transition: all 0.7s cubic-bezier(0.19,1,0.22,1);
+  }
+  .step.visible { opacity: 1; transform: translateX(0); }
+  .step-icon {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border: 1px solid var(--blue); display: flex;
+    align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--blue);
+  }
+  .step h3 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 0.5rem; }
+  .step p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+  .fusion-box {
+    margin-top: 2rem; padding: 2rem;
+    background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.3);
+    text-align: center;
+    opacity: 0; transform: scale(0.95);
+    transition: all 0.8s cubic-bezier(0.19,1,0.22,1);
+  }
+  .fusion-box.visible { opacity: 1; transform: scale(1); }
+  .fusion-box h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; color: var(--blue); margin-bottom: 0.5rem; }
+  .fusion-box p { font-size: 0.9rem; color: var(--muted); }
+
+  /* ── DEMO SLIDE ── */
+  .demo-layout {
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 3rem;
+    margin-top: 3rem; align-items: start;
+  }
+  .demo-form { display: flex; flex-direction: column; gap: 1rem; }
+  .demo-field label {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.4rem;
+    display: block; text-transform: uppercase;
+  }
+  .demo-field select, .demo-field input {
+    width: 100%; background: var(--card); border: 1px solid var(--border);
+    color: var(--white); padding: 0.7rem 1rem;
+    font-family: 'DM Mono', monospace; font-size: 0.85rem;
+    outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .demo-field select:focus, .demo-field input:focus { border-color: var(--blue); }
+  .demo-field option { background: #0a0e1a; }
+  .scenario-btns { display: flex; gap: 0.7rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .scenario-btn {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    padding: 0.5rem 0.9rem; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer;
+    letter-spacing: 0.05em; transition: all 0.2s;
+  }
+  .scenario-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .analyze-btn {
+    background: var(--blue); color: #000; border: none;
+    padding: 0.9rem; font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.9rem; cursor: pointer;
+    letter-spacing: 0.05em; transition: all 0.2s; width: 100%;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .analyze-btn:hover { background: var(--blue2); }
+  .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* result panel */
+  .result-panel {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 2rem; min-height: 340px;
+    display: flex; flex-direction: column; gap: 1.5rem;
+  }
+  .result-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+  }
+  .result-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; }
+  .live-dot { display: flex; align-items: center; gap: 0.4rem; font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+
+  /* scanning animation */
+  .scan-anim {
+    display: none; padding: 2rem; align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem; flex: 1;
+  }
+  .scan-anim.active { display: flex; }
+  .scan-bar-container {
+    width: 100%; height: 4px; background: rgba(255,255,255,0.05);
+    border-radius: 2px; overflow: hidden;
+  }
+  .scan-bar {
+    height: 100%; background: var(--blue);
+    animation: scanBar 2s linear forwards;
+    box-shadow: 0 0 10px var(--blue-glow);
+  }
+  @keyframes scanBar { from { width: 0; } to { width: 100%; } }
+  .scan-text { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--blue); }
+  .scan-steps { display: flex; flex-direction: column; gap: 0.4rem; width: 100%; }
+  .scan-step {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted);
+    display: flex; align-items: center; gap: 0.6rem;
+    opacity: 0; animation: fadeIn 0.4s forwards;
+  }
+  .scan-step::before { content: '►'; font-size: 0.5rem; color: var(--blue); }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* result content */
+  .result-content { display: none; flex-direction: column; gap: 1.2rem; flex: 1; }
+  .result-content.active { display: flex; }
+  .score-row { display: flex; align-items: center; gap: 1.5rem; }
+  .score-num {
+    font-family: 'Syne', sans-serif; font-size: 3.5rem; font-weight: 800;
+    line-height: 1;
+  }
+  .score-num.high { color: var(--red); text-shadow: 0 0 20px rgba(239,68,68,0.4); }
+  .score-num.low { color: var(--green); text-shadow: 0 0 20px rgba(34,197,94,0.4); }
+  .score-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; }
+  .score-rec {
+    font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700;
+    margin-top: 0.3rem; padding: 0.3rem 0.7rem;
+  }
+  .score-rec.danger { background: rgba(239,68,68,0.15); color: var(--red); }
+  .score-rec.safe { background: rgba(34,197,94,0.15); color: var(--green); }
+  .signals { display: flex; gap: 0.6rem; }
+  .signal-bar-wrap { flex: 1; }
+  .signal-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-bottom: 0.3rem; letter-spacing: 0.05em; }
+  .signal-bar-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .signal-fill { height: 100%; border-radius: 3px; transition: width 1s ease; width: 0; }
+  .signal-fill.high { background: var(--red); box-shadow: 0 0 8px rgba(239,68,68,0.5); }
+  .signal-fill.med { background: var(--amber); box-shadow: 0 0 8px rgba(245,158,11,0.5); }
+  .signal-fill.low { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+  .flags { display: flex; flex-direction: column; gap: 0.5rem; }
+  .flag {
+    font-family: 'DM Mono', monospace; font-size: 0.72rem;
+    padding: 0.5rem 0.8rem; display: flex; align-items: center; gap: 0.6rem;
+    line-height: 1.4;
+  }
+  .flag.red { background: rgba(239,68,68,0.08); border-left: 2px solid var(--red); color: #fca5a5; }
+  .flag.amber { background: rgba(245,158,11,0.08); border-left: 2px solid var(--amber); color: #fcd34d; }
+  .flag.green { background: rgba(34,197,94,0.08); border-left: 2px solid var(--green); color: #86efac; }
+  .flag-icon { flex-shrink: 0; }
+  .time-taken { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+
+  /* ── IMPACT SLIDE ── */
+  .impact-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;
+    margin-top: 3rem;
+  }
+  .impact-card {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 2.5rem; position: relative; overflow: hidden;
+    opacity: 0; transform: translateY(30px);
+    transition: all 0.7s cubic-bezier(0.19,1,0.22,1);
+  }
+  .impact-card.visible { opacity: 1; transform: translateY(0); }
+  .impact-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  }
+  .impact-big {
+    font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
+    color: var(--blue); line-height: 1; margin-bottom: 0.5rem;
+    text-shadow: 0 0 30px var(--blue-glow);
+  }
+  .impact-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── CLOSE SLIDE ── */
+  #close {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 6rem 2rem;
+  }
+  .close-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.8rem, 6vw, 5.5rem);
+    font-weight: 800; line-height: 1.05;
+    margin-bottom: 2rem;
+  }
+  .close-sub { font-size: 1.1rem; color: var(--muted); max-width: 580px; line-height: 1.7; margin-bottom: 3rem; }
+  .close-quote {
+    font-family: 'Syne', sans-serif; font-style: italic;
+    font-size: 1.6rem; color: var(--blue);
+    max-width: 700px; line-height: 1.4; margin-bottom: 3rem;
+  }
+  .scanline-footer {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--blue-dim); }
+
+  /* responsive */
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links, .nav-badge { display: none; }
+    .slide { padding: 5rem 1.5rem; }
+    .problem-grid, .process-steps, .impact-grid, .demo-layout, .streams { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SENT<span>RY</span></div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#solution">Solution</a>
+    <a href="#howitworks">How It Works</a>
+    <a href="#demo">Live Demo</a>
+    <a href="#impact">Impact</a>
+  </div>
+  <div class="nav-badge">
+    <div class="pulse"></div>
+    Dubai Customs Authority — AI Pilot
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">Dubai Customs Intelligence System</div>
+  <h1 class="hero-title">
+    Cargo doesn't lie.<br><em>Declarations do.</em>
+  </h1>
+  <p class="hero-sub">
+    SENTRY connects scanner images, declaration data, and risk intelligence to detect hidden threats in 2.3 seconds — at scale, every day.
+  </p>
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">See Live Demo</button>
+    <button class="btn-ghost" onclick="document.getElementById('howitworks').scrollIntoView({behavior:'smooth'})">How It Works</button>
+  </div>
+  <div class="stats-strip">
+    <div class="stat-item">
+      <div class="stat-num">2.3s</div>
+      <div class="stat-label">Per Analysis</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Data Streams Fused</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">87%</div>
+      <div class="stat-label">Detection Accuracy</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">17M</div>
+      <div class="stat-label">Declarations / Year</div>
+    </div>
+  </div>
+</section>
+
+<hr class="h-divider">
+
+<!-- PROBLEM -->
+<div id="problem" class="slide" data-delay="0">
+  <div class="slide-tag">01 — The Problem</div>
+  <h2 class="slide-title">Systems in silos.<br>Officers under pressure.</h2>
+  <p class="slide-body">
+    Every day, over 50,000 cargo shipments pass through Dubai ports and airports. Customs officers have seconds to decide. The X-ray scanner doesn't talk to the declaration database. The database doesn't talk to the risk watchlist. An officer has to manually connect the dots — at scale, every day. That's not a people problem. That's a systems problem.
+  </p>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <h3>The Current Reality</h3>
+      <p>Three critical data systems exist — but none of them communicate. Officers must manually cross-reference everything under time pressure and volume stress.</p>
+      <div class="silo-diagram">
+        <div class="silo">X-Ray Scanner</div>
+        <div class="silo-x">✕</div>
+        <div class="silo">Declaration DB</div>
+        <div class="silo-x">✕</div>
+        <div class="silo">Risk Watchlist</div>
+      </div>
+    </div>
+    <div class="problem-card">
+      <h3>What Smugglers Exploit</h3>
+      <p>Sophisticated networks use misdeclaration, false invoicing, shell entities, and known blind spots in manual inspection to move drugs, weapons, and counterfeit goods through high-volume corridors.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="h-divider">
+
+<!-- SOLUTION -->
+<div id="solution" class="slide" data-delay="0">
+  <div class="slide-tag">02 — The Solution</div>
+  <h2 class="slide-title">SENTRY — a<br>lie detector for cargo.</h2>
+  <p class="slide-body">
+    We built an AI-powered cargo intelligence system that connects three data streams in real time. Individually, each signal is useful. Together, they're unstoppable.
+  </p>
+  <div class="streams">
+    <div class="stream-card" data-stream="0">
+      <div class="stream-num">01</div>
+      <h3>Scanner Images</h3>
+      <p>X-ray and CT scan analysis. Computer vision checks if the physical shape, density, and volume match the declared goods.</p>
+    </div>
+    <div class="stream-card" data-stream="1">
+      <div class="stream-num">02</div>
+      <h3>Declaration Data</h3>
+      <p>HS code validation, weight-to-value anomaly detection, NLP entity analysis, invoice intelligence. Does the paperwork make sense?</p>
+    </div>
+    <div class="stream-card" data-stream="2">
+      <div class="stream-num">03</div>
+      <h3>Risk Intelligence</h3>
+      <p>WCO watchlists, known smuggling route profiling, entity graph connections. Who is sending this — and where from?</p>
+    </div>
+  </div>
+</div>
+
+<hr class="h-divider">
+
+<!-- HOW IT WORKS -->
+<div id="howitworks" class="slide" data-delay="0">
+  <div class="slide-tag">03 — How It Works</div>
+  <h2 class="slide-title">All three streams.<br>One decision.</h2>
+  <p class="slide-body">When a shipment arrives, SENTRY runs all three streams simultaneously. One flag is a question. Three flags on the same shipment — that's a hold.</p>
+  <div class="process-steps">
+    <div class="step" data-stepdelay="0">
+      <div class="step-icon">AI</div>
+      <div>
+        <h3>Computer Vision</h3>
+        <p>Analyses the scan and asks: does the shape, density, and volume match what was declared? Detects hidden voids, density anomalies, concealed objects.</p>
+      </div>
+    </div>
+    <div class="step" data-stepdelay="150">
+      <div class="step-icon">DOC</div>
+      <div>
+        <h3>Rules Engine</h3>
+        <p>Checks the declaration: is the weight plausible? Is the invoice value suspicious? Is this a first-time importer with a high-value consignment?</p>
+      </div>
+    </div>
+    <div class="step" data-stepdelay="300">
+      <div class="step-icon">NET</div>
+      <div>
+        <h3>Risk Model</h3>
+        <p>Cross-references watchlists, known narcotics and weapons corridors, and entity graph linkages. Has this consignee appeared in prior flagged shipments?</p>
+      </div>
+    </div>
+    <div class="step" data-stepdelay="450">
+      <div class="step-icon">⚡</div>
+      <div>
+        <h3>Fusion Engine</h3>
+        <p>Cross-references all three in under 2.3 seconds. Produces a 0–100 risk score with specific, actionable flags for the officer.</p>
+      </div>
+    </div>
+  </div>
+  <div class="fusion-box">
+    <h3>Every confirmed seizure makes it smarter.</h3>
+    <p>The system learns from every outcome — every seizure, every cleared false positive. Detection improves every single day.</p>
+  </div>
+</div>
+
+<hr class="h-divider">
+
+<!-- DEMO -->
+<div id="demo" class="slide" data-delay="0">
+  <div class="slide-tag">04 — Live Demo</div>
+  <h2 class="slide-title">Cargo Analysis<br>Terminal</h2>
+
+  <div class="demo-layout">
+    <!-- LEFT: input -->
+    <div>
+      <div class="scenario-btns">
+        <button class="scenario-btn" onclick="loadScenario('high')">⚠ High-Risk Shipment</button>
+        <button class="scenario-btn" onclick="loadScenario('clean')">✓ Clean Shipment</button>
+      </div>
+      <div class="demo-form">
+        <div class="demo-field">
+          <label>Origin Country</label>
+          <input type="text" id="origin" placeholder="e.g. Afghanistan">
+        </div>
+        <div class="demo-field">
+          <label>Declared Goods</label>
+          <select id="goods">
+            <option value="">Select goods type</option>
+            <option value="textile">Textile Fabric</option>
+            <option value="electronics">Consumer Electronics</option>
+            <option value="machinery">Industrial Machinery</option>
+            <option value="pharma">Pharmaceutical Products</option>
+          </select>
+        </div>
+        <div class="demo-field">
+          <label>Declared Weight (kg)</label>
+          <input type="number" id="weight" placeholder="e.g. 40">
+        </div>
+        <div class="demo-field">
+          <label>Invoice Value (USD)</label>
+          <input type="number" id="value" placeholder="e.g. 180">
+        </div>
+        <div class="demo-field">
+          <label>Consignee Type</label>
+          <select id="consignee">
+            <option value="">Select type</option>
+            <option value="first">First-Time Importer</option>
+            <option value="known">Known Verified Importer</option>
+            <option value="flagged">Previously Flagged Entity</option>
+          </select>
+        </div>
+        <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">RUN SENTRY ANALYSIS →</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: result -->
+    <div class="result-panel">
+      <div class="result-header">
+        <div class="result-title">SENTRY RESULT</div>
+        <div class="live-dot"><div class="pulse"></div>LIVE</div>
+      </div>
+
+      <!-- idle -->
+      <div id="idleState" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;opacity:0.3">
+        <div style="font-size:2.5rem;opacity:0.3">◈</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--muted)">Load a scenario and run analysis</div>
+      </div>
+
+      <!-- scanning -->
+      <div class="scan-anim" id="scanAnim">
+        <div class="scan-text">SCANNING SHIPMENT...</div>
+        <div class="scan-bar-container"><div class="scan-bar" id="scanBar"></div></div>
+        <div class="scan-steps" id="scanSteps"></div>
+      </div>
+
+      <!-- result -->
+      <div class="result-content" id="resultContent">
+        <div class="score-row">
+          <div>
+            <div class="score-num" id="scoreNum">—</div>
+            <div class="score-label">RISK SCORE / 100</div>
+            <div class="score-rec" id="scoreRec"></div>
+          </div>
+          <div style="flex:1">
+            <div class="signals" id="signalsRow"></div>
+          </div>
+        </div>
+        <div class="flags" id="flagsList"></div>
+        <div class="time-taken" id="timeTaken"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="h-divider">
+
+<!-- IMPACT -->
+<div id="impact" class="slide" data-delay="0">
+  <div class="slide-tag">05 — Impact</div>
+  <h2 class="slide-title">The numbers<br>that matter.</h2>
+  <p class="slide-body">Dubai Customs processes over 17 million declarations a year. Even a 0.5% improvement in catch rate means tens of thousands of flagged consignments — drugs, weapons, counterfeit goods, undeclared cash.</p>
+  <div class="impact-grid">
+    <div class="impact-card" data-icard="0">
+      <div class="impact-big">17M+</div>
+      <div class="impact-desc">Declarations processed annually by Dubai Customs Authority — SENTRY screens every one in parallel.</div>
+    </div>
+    <div class="impact-card" data-icard="1">
+      <div class="impact-big">2.3s</div>
+      <div class="impact-desc">Per shipment analysis, down from 20+ minutes of manual cross-referencing. No officer time wasted on clean cargo.</div>
+    </div>
+    <div class="impact-card" data-icard="2">
+      <div class="impact-big">87%</div>
+      <div class="impact-desc">Improvement in detection accuracy during testing. False positives under 0.4% — officers trust the flags.</div>
+    </div>
+    <div class="impact-card" data-icard="3">
+      <div class="impact-big">$400B</div>
+      <div class="impact-desc">Total trade volume flowing through Dubai annually. SENTRY protects the full chain — not just the red flags.</div>
+    </div>
+  </div>
+</div>
+
+<hr class="h-divider">
+
+<!-- CLOSE -->
+<section id="close">
+  <div class="slide-tag" style="margin-bottom:2rem;opacity:0;animation:fadeUp 0.8s 0.2s forwards" id="closeTag">06 — The Vision</div>
+  <blockquote class="close-quote" style="opacity:0;transform:translateY(30px);transition:all 0.9s 0.3s" id="closeQuote">
+    "SENTRY doesn't replace customs officers.<br>It makes them superhuman."
+  </blockquote>
+  <p class="close-sub" style="opacity:0;transform:translateY(20px);transition:all 0.9s 0.5s" id="closeSub">
+    The scanners exist. The databases exist. The AI exists. We connected them — and built the infrastructure that turns every Dubai Customs officer into a force multiplier.
+  </p>
+  <div class="hero-btns" style="opacity:0;transform:translateY(20px);transition:all 0.9s 0.7s" id="closeBtn">
+    <button class="btn-primary" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">Try the Demo</button>
+    <button class="btn-ghost" onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">Back to Top</button>
+  </div>
+  <div class="scanline-footer" style="margin-top:4rem;opacity:0.3">SENTRY // Dubai Customs Authority // AI Pilot Program // 2025</div>
+</section>
+
+<script>
+// ── INTERSECTION OBSERVER FOR SCROLL ANIMATIONS ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+
+      // stagger children
+      const streams = entry.target.querySelectorAll('.stream-card');
+      streams.forEach((s, i) => {
+        setTimeout(() => s.classList.add('visible'), i * 150);
+      });
+
+      const steps = entry.target.querySelectorAll('.step');
+      steps.forEach((s, i) => {
+        const d = parseInt(s.dataset.stepdelay) || i * 150;
+        setTimeout(() => s.classList.add('visible'), d);
+      });
+
+      const fb = entry.target.querySelector('.fusion-box');
+      if (fb) setTimeout(() => fb.classList.add('visible'), 600);
+
+      const icards = entry.target.querySelectorAll('.impact-card');
+      icards.forEach((c, i) => setTimeout(() => c.classList.add('visible'), i * 120));
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.slide').forEach(s => observer.observe(s));
+
+// close section observer
+const closeObs = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    document.getElementById('closeQuote').style.opacity = '1';
+    document.getElementById('closeQuote').style.transform = 'translateY(0)';
+    document.getElementById('closeSub').style.opacity = '1';
+    document.getElementById('closeSub').style.transform = 'translateY(0)';
+    document.getElementById('closeBtn').style.opacity = '1';
+    document.getElementById('closeBtn').style.transform = 'translateY(0)';
+  }
+}, { threshold: 0.3 });
+closeObs.observe(document.getElementById('close'));
+
+// ── SCENARIO LOADER ──
+const scenarios = {
+  high: {
+    origin: 'Afghanistan',
+    goods: 'textile',
+    weight: 40,
+    value: 180,
+    consignee: 'flagged',
+    result: {
+      score: 87,
+      rec: 'PHYSICAL EXAMINATION REQUIRED',
+      recClass: 'danger',
+      signals: [
+        { label: 'IMAGE AI', pct: 90, cls: 'high' },
+        { label: 'DECLARATION', pct: 82, cls: 'high' },
+        { label: 'RISK MODEL', pct: 85, cls: 'high' }
+      ],
+      flags: [
+        { cls: 'red', icon: '⊗', text: 'Volumetric density anomaly: scan suggests ~180kg, declared 40kg' },
+        { cls: 'red', icon: '⊗', text: 'Invoice value $4.50/kg for textile — market rate is ~$45/kg (10× undervalued)' },
+        { cls: 'red', icon: '⊗', text: 'Consignee linked to 2 previously flagged shipments in entity graph' },
+        { cls: 'amber', icon: '⚠', text: 'Origin corridor: known narcotics route (AF→AE), high-frequency flag' }
+      ]
+    }
+  },
+  clean: {
+    origin: 'Germany',
+    goods: 'machinery',
+    weight: 850,
+    value: 42000,
+    consignee: 'known',
+    result: {
+      score: 8,
+      rec: 'CLEARED — NO INTERVENTION',
+      recClass: 'safe',
+      signals: [
+        { label: 'IMAGE AI', pct: 10, cls: 'low' },
+        { label: 'DECLARATION', pct: 7, cls: 'low' },
+        { label: 'RISK MODEL', pct: 6, cls: 'low' }
+      ],
+      flags: [
+        { cls: 'green', icon: '✓', text: 'Scan density consistent with declared industrial machinery' },
+        { cls: 'green', icon: '✓', text: 'Invoice value $49.4/kg — within expected range for machinery' },
+        { cls: 'green', icon: '✓', text: 'Verified importer — 47 prior cleared shipments, zero flags' }
+      ]
+    }
+  }
+};
+
+let currentResult = null;
+
+function loadScenario(type) {
+  const s = scenarios[type];
+  document.getElementById('origin').value = s.origin;
+  document.getElementById('goods').value = s.goods;
+  document.getElementById('weight').value = s.weight;
+  document.getElementById('value').value = s.value;
+  document.getElementById('consignee').value = s.consignee;
+  currentResult = s.result;
+
+  // reset result panel
+  document.getElementById('idleState').style.display = 'none';
+  document.getElementById('scanAnim').classList.remove('active');
+  document.getElementById('resultContent').classList.remove('active');
+  document.getElementById('idleState').style.display = 'flex';
+}
+
+function runAnalysis() {
+  if (!currentResult) {
+    // derive basic result from inputs
+    const origin = document.getElementById('origin').value;
+    const weight = parseFloat(document.getElementById('weight').value) || 50;
+    const value = parseFloat(document.getElementById('value').value) || 500;
+    const consignee = document.getElementById('consignee').value;
+    let score = Math.floor(20 + Math.random() * 30);
+    if (consignee === 'flagged') score += 30;
+    if (value / weight < 5) score += 20;
+    score = Math.min(score, 95);
+    currentResult = {
+      score,
+      rec: score > 60 ? 'PHYSICAL EXAMINATION REQUIRED' : 'LOW RISK — CLEARED',
+      recClass: score > 60 ? 'danger' : 'safe',
+      signals: [
+        { label: 'IMAGE AI', pct: score + 5, cls: score > 60 ? 'high' : 'low' },
+        { label: 'DECLARATION', pct: score - 5, cls: score > 60 ? 'high' : 'low' },
+        { label: 'RISK MODEL', pct: score, cls: score > 60 ? 'high' : 'low' }
+      ],
+      flags: [{ cls: score > 60 ? 'red' : 'green', icon: score > 60 ? '⊗' : '✓', text: 'Analysis complete based on provided inputs' }]
+    };
+  }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+
+  // hide idle, show scanning
+  document.getElementById('idleState').style.display = 'none';
+  document.getElementById('resultContent').classList.remove('active');
+  const scanEl = document.getElementById('scanAnim');
+  scanEl.classList.add('active');
+
+  // reset scan bar
+  const bar = document.getElementById('scanBar');
+  bar.style.animation = 'none';
+  bar.offsetHeight;
+  bar.style.animation = 'scanBar 2s linear forwards';
+
+  // scan steps
+  const msgs = [
+    'Ingesting X-ray scan data...',
+    'Running computer vision model...',
+    'Cross-referencing declaration fields...',
+    'Querying risk watchlists...',
+    'Fusion engine processing...'
+  ];
+  const stepsEl = document.getElementById('scanSteps');
+  stepsEl.innerHTML = '';
+  msgs.forEach((m, i) => {
+    const div = document.createElement('div');
+    div.className = 'scan-step';
+    div.textContent = m;
+    div.style.animationDelay = `${i * 0.35}s`;
+    stepsEl.appendChild(div);
+  });
+
+  setTimeout(() => {
+    scanEl.classList.remove('active');
+    showResult(currentResult);
+    btn.disabled = false;
+    currentResult = null;
+  }, 2400);
+}
+
+function showResult(r) {
+  const el = document.getElementById('resultContent');
+  el.classList.add('active');
+
+  // score
+  const numEl = document.getElementById('scoreNum');
+  numEl.textContent = r.score;
+  numEl.className = 'score-num ' + (r.score > 60 ? 'high' : 'low');
+  const rec = document.getElementById('scoreRec');
+  rec.textContent = r.rec;
+  rec.className = 'score-rec ' + r.recClass;
+
+  // signals
+  const row = document.getElementById('signalsRow');
+  row.innerHTML = '';
+  r.signals.forEach(s => {
+    const wrap = document.createElement('div');
+    wrap.className = 'signal-bar-wrap';
+    wrap.innerHTML = `<div class="signal-label">${s.label}</div>
+      <div class="signal-bar-bg"><div class="signal-fill ${s.cls}" style="width:0"></div></div>`;
+    row.appendChild(wrap);
+    setTimeout(() => {
+      wrap.querySelector('.signal-fill').style.width = Math.min(s.pct, 100) + '%';
+    }, 100);
+  });
+
+  // flags
+  const fl = document.getElementById('flagsList');
+  fl.innerHTML = '';
+  r.flags.forEach(f => {
+    const div = document.createElement('div');
+    div.className = `flag ${f.cls}`;
+    div.innerHTML = `<span class="flag-icon">${f.icon}</span>${f.text}`;
+    fl.appendChild(div);
+  });
+
+  document.getElementById('timeTaken').textContent = `Analysis completed in ${(2.1 + Math.random() * 0.4).toFixed(1)}s`;
+}
+</script>
+</body>
+</html>
